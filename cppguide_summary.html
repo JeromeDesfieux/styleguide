@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mission+ C++ Style Guide</title>
+<link rel="stylesheet" href="include/styleguide.css">
+<script src="include/styleguide.js"></script>
+</head>
+<body onload="initStyleGuide();">
+<div id="content">
+<h1>Mission+ C++ Style Guide</h1>
+<div class="horizontal_toc" id="tocDiv"></div>
+<div class="main_body">
+
+<h2 id="Global">Global</h2>
+<h3 id="Documentation">Documentation</h3>
+<p>Documentation shall be written using doxygen syntax</p>
+<p>At least you have to document public API of your classes as well as the class itself.</p>
+
+<h3 id="Naming">Naming conventions</h3>
+<p>Classes and structures have to be in upper camel case.</p>
+<p>Namespaces, methods of a class, local variables and structure members have to be in lower camel case.</p>
+<p>Members of a class have to be in lower camel case with a leading underscore.</p>
+<p>Constants and macro have to be in uppercase with underscores.</p>
+<p>Also, do not use prefix like in, out, p_, ... for method parameters.
+This will be redundant with doxygen documentation and this formalism is always hard to maintain in all the project life.</p>
+<p>Example: </p>
+<pre class="good">
+namespace missionPlus {
+
+class AircraftServices: public QObject {
+	Q_OBJECT
+	
+public:
+	enum ApsMode {
+		DISABLED = 0,
+		SIMULATED_KEYBOARD,
+		NB_ENUM
+	};
+
+	struct Position {
+		double longitude;//in degrees
+		double latitude;//in degrees
+	};
+	
+	explicit AircraftServices(QObject *parent = 0);
+	
+	void startAps();
+	
+	static const int MIN_ALTITUDE = 0;
+	
+private:
+	ApsMode _apsMode{DISABLED};
+}
+
+} //namespace missionPlus
+</pre>
+
+<h2 id="Header">Header files</h2>
+
+<h3 id="headerGuard">Header guards</h3>
+<p>Use <code>#pragma once</code> instead of header guards. It is less error prone.</p>
+<p>
+At the beginning of file AircraftServices.h:
+</p>
+<p>
+Use
+<pre class="good">
+#pragma once
+</pre>
+Instead of
+<pre class="bad">
+#ifndef _MISSION_PLUS_AIRCRAFT_SERVICES_H_
+#define _MISSION_PLUS_AIRCRAFT_SERVICES_H_
+...
+#endif /* _MISSION_PLUS_AIRCRAFT_SERVICES_H_ */
+</pre>
+</p>
+
+<h3 id="headerInc">Header inclusion</h3>
+<p>In order that <code>#pragma once</code> works as intended, include headers with full path from the project root.
+<p>
+Use
+<pre class="good">
+#include "gps/GpsService.h"
+</pre>
+Instead of modifying includes directory and including without path or including with relative path
+<pre class="bad">
+#include "../gps/GpsService.h" //No!
+#include "GpsService.h" //No!
+</pre>
+</p>
+
+<h3 id="usingN">Using namespace</h3>
+<p>Do not use <code>using namespace ...</code> in the header as it removes all the benefits of namespaces.</p>
+<p>
+Use
+<pre class="good">
+int myMethod(const dynamo::coreApp:Position &amp;p);
+</pre>
+Instead of
+<pre class="bad">
+using namespace dynamo::coreApp;
+int myMethod(const Position &amp;p);
+</pre>
+</p>
+
+<h3 id="fwdDecl">Forward declaration</h3>
+<p>In order to reduce compilation time, use forward declaration in headers when possible.</p>
+<p>
+Use
+<pre class="good">
+class GpsService;
+int myMethod(const GpsService &amp;service);
+</pre>
+Instead of
+<pre class="bad">
+#include "gps/GpsService.h"
+int myMethod(const GpsService &amp;service);
+</pre>
+</p>
+
+<h3 id="const">Constants</h3>
+<p>For constants, use <code>static const</code> instead of <code>#define</code>.</p>
+<p>
+Use
+<pre class="good">
+static const int MAX_VALUE=360;
+</pre>
+Instead of
+<pre class="bad">
+#define MAX_VALUE 360
+</pre>
+</p>
+
+<h3 id="ruleOfZero">Rule of Zero</h3>
+<p>The Rule of Zero states that you do not provide any of the functions that the compiler can provide (copy constructor, copy assignment operator, move constructor, move assignment operator, destructor) unless the class you are constructing does some novel form of ownership.
+
+The goal is to let the compiler provide optimal versions that are automatically maintained when more member variables are added.</p>
+<p>
+<pre class="good">
+class MyClass {
+   public:
+    /** \brief constructor */
+    MyClass();
+    /** \brief destructor */
+    ~MyClass() = default;
+
+   private:
+    // copy constructor
+    MyClass(const MyClass&amp;) = delete;
+    // copy assignment
+    MyClass&amp; operator=(const MyClass&amp;) = delete;
+    // move constructor
+    MyClass(MyClass&amp;&amp;) = delete;
+    // move assignment
+    MyClass&amp; operator=(MyClass&amp;&amp;) = delete;
+</pre>
+</p>
+
+<h3 id="membersInit">Members initialization</h3>
+<p>Initialize all members with default values with brace initialization in header.</p>
+<p>
+Use
+<pre class="good">
+class MyClass
+{
+public:
+  MyClass(int value)
+    : _value(value)
+  {
+  }
+
+private:
+  int _value {0};
+  int _value2 {0};
+  int _objectPtr {nullptr};
+};</pre>
+Instead of
+<pre class="bad">
+class MyClass
+{
+public:
+  MyClass(int value)
+    : _value(value),
+      _value2(0),
+      _objectPtr(nullptr)
+  {
+  }
+
+private:
+  int _value;
+  int _value2;
+  int _objectPtr;
+};</pre>
+</p>
+
+<h3 id="membersUnit">Units</h3>
+<p>With doxygen, by simple comment or by a good variable naming, do not forget to indicate the units of your variable, and its range if it is relevant.</p>
+<p>Use
+<pre class="good">
+  unsigned int distanceInMeters;//range = [0, 99 999 999]
+  unsigned int distance;//in meters, range = [0, 99 999 999]
+</pre>
+Instead of
+<pre class="bad">
+  unsigned int distance;
+</pre>
+</p>
+<h3 id="virtDest">Virtual destructor</h3>
+<p>The destructor shall be virtual if at least one virtual function is defined in the class or one of its parents.</p>
+
+
+<h2 id="Cpp">Cpp files</h2>
+
+<h3 id="incOrder">Includes order</h3>
+<p>TODO</p>
+
+<h2 id="Methods">Methods</h2>
+
+<h3 id="comments">Comments</h3>
+<p>Prefer having a code that is self-documenting. Giving sensible names to types, variables and methods is much better than using obscure names that you must then explain through comments.
+Reserve comments for difficult parts or for explaining the choice you have made (comments should document the "why" and not the "how").</p>
+
+<h3 id="except">Exceptions</h3>
+<p>Do not raise exceptions in your code. But do not forget to catch third parties exceptions.</p>
+
+<h3 id="blocksWith">Blocks with {}</h3>
+<p>For all blocks, <code>{}</code> is mandatory.</p>
+<p>
+Use
+<pre class="good">
+for (int i = 0 ; i &lt; 15 ; ++i) {
+  doSomething();
+}
+
+if (condition) {
+  doOneTask();
+} else {
+  doAnotherTask();
+}
+</pre>
+Instead of
+<pre class="bad">
+for (int i = 0 ; i &lt; 15 ; ++i)
+  doSomething();
+
+if (condition)
+  doOneTask();
+else
+  doAnotherTask();
+</pre>
+</p>
+
+<h3 id="thisKeyword">Do not use "this"</h3>
+<p>Do not use <code>this</code> except if it increases readability.</p>
+<p>
+Use
+<pre class="good">
+void MyClass:myMethod(const int &amp;param) {
+  if (_myMember &lt; param) {
+    doSomething();
+  }
+}
+</pre>
+Instead of
+<pre class="bad">
+void MyClass:myMethod(const int &amp;param) {
+  if (this->_myMember &lt; param) {
+    doSomething();
+  }
+}
+</pre>
+</p>
+
+<h3 id="stackVsH">Stack vs Heap</h3>
+<p>Use stack instead of heap as much as possible, but be aware of stack limitation (particularly in recursive methods)</p>
+<p>
+Use
+<pre class="good">
+void MyClass::myMethod() {
+  OtherClass object;
+  doSomething(object);
+}
+</pre>
+Instead of
+<pre class="bad">
+void MyClass::myMethod() {
+  OtherClass *object = std::make_unique&lt;OtherClass&gt;();
+  doSomething(*object);  
+}
+</pre>
+</p>
+
+<h3 id="pointers">Smart pointers vs Raw pointers</h3>
+<p>Use smart pointers (C++14 style) instead of raw pointers.</p>
+<p>
+Use
+<pre class="good">
+auto myObj = std::make_unique&lt;MyClass&gt;(constructorParam1, constructorParam2); // C++14
+auto myBuffer = std::make_unique&lt;char[]&gt;(length); // C++14
+auto myobj = std::make_shared&lt;MyClass&gt;();
+</pre>
+Instead of
+<pre class="bad">
+MyClass *myObj = new MyClass(constructorParam1, constructorParam2);
+</pre>
+</p>
+
+<h3 id="inputParam">Input parameters</h3>
+<p>Pass input parameter by const reference when it is an object. It allows to improve performance (no copy) and reliability (no pointer).</p>
+<p>
+Use
+<pre class="good">
+void MyClass::myMethod(const QString &amp;string) {
+}
+</pre>
+Instead of
+<pre class="bad">
+void MyClass::myMethod(QString *string) {
+//Here we have to check the pointer even if we know it cannot be NULL
+}
+
+void MyClass::myMethod(QString string) {
+//Here string is a copy of the original object =&gt; performance issue
+}
+</pre>
+</p>
+
+<h3 id="nullPtr">Null pointers</h3>
+<p>For null pointers, use <code>nullptr</code> instead of NULL.</p>
+<p>
+Use
+<pre class="good">
+Position *position = nullptr;
+</pre>
+Instead of
+<pre class="bad">
+Position *position = NULL;
+</pre>
+</p>
+
+<h3 id="cast">Casts</h3>
+<p>Use C++ style cast instead of C style cast.</p>
+<p>
+Use
+<pre class="good">
+double x = getX();
+int i = static_cast&lt;int&gt;(x);
+</pre>
+Instead of
+<pre class="bad">
+double x = getX();
+int i = (int)x;
+</pre>
+</p>
+
+<h2 id="samples">Samples</h2>
+<h3 id="samplesH">Header file</h3>
+<pre class="good">
+/*
+* Copyright 2019 NAVBLUE. All rights reserved.
+*/
+#pragma once
+
+namespace Navblue {
+namespace MissionPlus {
+  class OtherClass;
+
+/**
+* \class ARealyNiceClass
+* \brief A really nice class demonstrating our code guidelines
+*/
+class MyClass {
+   public:
+    // CTors &amp; DTor
+
+    /** \brief constructor */
+    MyClass();
+    /** \brief destructor */
+    ~MyClass() = default;
+
+    // Methods
+
+    /**
+    * \brief A very ususeful method doing a lot of thing like this and that
+    * \param[in] argWellNamed is a parameter that we just use for example
+    * \return the result of a very complicated operation
+    */
+    double oneUsefulMethod(const OtherClass&amp; argWellNamed);
+
+
+
+   protected:
+
+   private:
+    // copy constructor
+    MyClass(const MyClass&amp;) = delete;
+    // copy assignment
+    MyClass&amp; operator=(const MyClass&amp;) = delete;
+    // move constructor
+    MyClass(MyClass&amp;&amp;) = delete;
+    // move assignment
+    MyClass&amp; operator=(MyClass&amp;&amp;) = delete;
+
+    // Methods
+    int onePrivateMethod(int nbWaypoints);
+
+    // Private attributes
+
+    /** \brief Here is a nice attribut called _file and doing something */
+    int _nbFlightPlans {1};
+
+};
+}  // namespace MissionPlus
+}  // namespace Navblue
+</pre>
+<h3 id="samplesCpp">Cpp file</h3>
+<pre class="good">
+/*
+* Copyright 2019 NAVBLUE. All rights reserved.
+*/
+
+/********* PROJECTS INCLUDES ************/
+#include "MyClass.h"
+
+/********* COTS INCLUDES ************/
+#include "OtherClass.h"
+
+using namespace Navblue::MissionPlus;
+
+MyClass::MyClass() {
+
+}
+
+double MyClass::oneUsefulMethod(const OtherClass&amp; argWellNamed) {
+
+}
+
+int MyClass::onePrivateMethod(int nbWaypoints) {
+    int localVariable;
+
+}
+</pre>
+
+</body>
+</html>

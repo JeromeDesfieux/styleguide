@@ -74,6 +74,12 @@ code.bad, code.badcode {
   color: magenta;
 }
 
+pre.good {
+  background-color:#e6ffd8;
+  border-top:1px inset #a03;
+  border-left:1px inset #a03;
+}
+
 pre.bad, pre.badcode {
   background-color:#ffe6d8;
   border-top:1px inset #a03;
