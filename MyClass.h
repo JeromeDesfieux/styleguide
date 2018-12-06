@@ -3,15 +3,17 @@
 */
 #pragma once
 
-namespace Navblue {
-namespace MissionPlus {
+namespace navblue {
+namespace missionplus {
+
   class OtherClass;
 
 /**
 * \class ARealyNiceClass
 * \brief A really nice class demonstrating our code guidelines
 */
-class MyClass {
+class MyClass
+{
    public:
     // CTors & DTor
 
@@ -52,5 +54,7 @@ class MyClass {
     int _nbFlightPlans {1};
 
 };
-}  // namespace MissionPlus
-}  // namespace Navblue
+
+}  // namespace missionplus
+}  // namespace navblue
+

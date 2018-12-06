@@ -15,35 +15,56 @@
 <h2 id="Global">Global</h2>
 <h3 id="Documentation">Documentation</h3>
 <p>Documentation shall be written using doxygen syntax</p>
-<p>At least you have to document public API of your classes as well as the class itself.</p>
+<p>At least you have to document the public API of your classes as well as the class itself.</p>
+
+<h3 id="todos">TODO</h3>
+<p>In case of complex methods, do not hesitate to code first the most frequent cases and to comment the non-handled cases with <code>//TODO</code> comments.</p>
+<p>You will code these TODO later once you have better understood the problem. It is very frequently a winning strategy.</p>
+
+<h3 id="log">Logs</h3>
+<p>6 levels of log can be used:
+<ol>
+<li>FATAL: fatal error which closes the application.</li>
+<li>ERROR: error which impacts user experience.</li>
+<li>WARN: potential problem with no impact on user experience.</li>
+<li>INFO: for tracing all elements that can help to reproduce what happened (user input, connection status with other systems, performance measures, ...).</li>
+<li>TRACE: for development purpose.</li>
+<li>DEBUG: for development purpose, more verbose than TRACE level.</li>
+</ol>
+</p>
+<p>Note that the application delivered to the clients will log only INFO level to FATAL level.</p>
 
 <h3 id="Naming">Naming conventions</h3>
+<p>Namespaces have to be in lower case.</p>
 <p>Classes and structures have to be in upper camel case.</p>
-<p>Namespaces, methods of a class, local variables and structure members have to be in lower camel case.</p>
+<p>Methods of a class, local variables and structure members have to be in lower camel case.</p>
 <p>Members of a class have to be in lower camel case with a leading underscore.</p>
 <p>Constants and macro have to be in uppercase with underscores.</p>
 <p>Also, do not use prefix like in, out, p_, ... for method parameters.
 This will be redundant with doxygen documentation and this formalism is always hard to maintain in all the project life.</p>
 <p>Example: </p>
 <pre class="good">
-namespace missionPlus {
+namespace missionplus {
 
-class AircraftServices: public QObject {
+class AircraftServices: public QObject
+{
 	Q_OBJECT
 	
 public:
-	enum ApsMode {
+	enum ApsMode
+	{
 		DISABLED = 0,
 		SIMULATED_KEYBOARD,
-		NB_ENUM
+		NB_ENUM_APS_MODE
 	};
 
-	struct Position {
+	struct Position
+	{
 		double longitude;//in degrees
 		double latitude;//in degrees
 	};
 	
-	explicit AircraftServices(QObject *parent = 0);
+	explicit AircraftServices(QObject *parent = nullptr);
 	
 	void startAps();
 	
@@ -53,7 +74,7 @@ private:
 	ApsMode _apsMode{DISABLED};
 }
 
-} //namespace missionPlus
+} //namespace missionplus
 </pre>
 
 <h2 id="Header">Header files</h2>
@@ -107,6 +128,8 @@ int myMethod(const Position &amp;p);
 
 <h3 id="fwdDecl">Forward declaration</h3>
 <p>In order to reduce compilation time, use forward declaration in headers when possible.</p>
+<p>Note that forward declaration is possible if the compiler does not need to know the actual size
+of the class nor its functions, i.e. when only pointers or references to the class are used by attributes and functions in the header file.</p>
 <p>
 Use
 <pre class="good">
@@ -135,11 +158,16 @@ Instead of
 
 <h3 id="ruleOfZero">Rule of Zero</h3>
 <p>The Rule of Zero states that you do not provide any of the functions that the compiler can provide (copy constructor, copy assignment operator, move constructor, move assignment operator, destructor) unless the class you are constructing does some novel form of ownership.
-
-The goal is to let the compiler provide optimal versions that are automatically maintained when more member variables are added.</p>
+The goal is to let the compiler provide optimal versions that are automatically maintained when more member variables are added. <br>In practice:
+<ol>
+<li>By default, use <code>= delete </code> for copy, move constructors and assignment operators.</li>
+<li>If you need to use one of these methods, use <code>= default</code>, except if the class has pointers or file handlers as attributes.</li>
+</ol>
+</p>
 <p>
 <pre class="good">
-class MyClass {
+class MyClass
+{
    public:
     /** \brief constructor */
     MyClass();
@@ -149,11 +177,11 @@ class MyClass {
    private:
     // copy constructor
     MyClass(const MyClass&amp;) = delete;
-    // copy assignment
+    // copy assignment operator
     MyClass&amp; operator=(const MyClass&amp;) = delete;
     // move constructor
     MyClass(MyClass&amp;&amp;) = delete;
-    // move assignment
+    // move assignment operator
     MyClass&amp; operator=(MyClass&amp;&amp;) = delete;
 </pre>
 </p>
@@ -210,6 +238,27 @@ Instead of
 <h3 id="virtDest">Virtual destructor</h3>
 <p>The destructor shall be virtual if at least one virtual function is defined in the class or one of its parents.</p>
 
+<h3 id="override">Override specifier</h3>
+<p>The <code>override</code> shall be used for every method you override. It helps to avoid bugs on a derived class as the compiler will raise an error
+when the overriden method cannot be overriden.</p>
+Example from cppreference.com:
+<p>
+<pre class="good">
+struct A
+{
+    virtual void foo();
+    void bar();
+};
+ 
+struct B : A
+{
+    void foo() const override; // Error: B::foo does not override A::foo
+                               // (signature mismatch)
+    void foo() override; // OK: B::foo overrides A::foo
+    void bar() override; // Error: A::bar is not virtual
+};
+</pre>
+</p>
 
 <h2 id="Cpp">Cpp files</h2>
 
@@ -230,14 +279,18 @@ Reserve comments for difficult parts or for explaining the choice you have made 
 <p>
 Use
 <pre class="good">
-for (int i = 0 ; i &lt; 15 ; ++i) {
-  doSomething();
+for (int i = 0 ; i &lt; 15 ; ++i)
+{
+    doSomething();
 }
 
-if (condition) {
-  doOneTask();
-} else {
-  doAnotherTask();
+if (condition)
+{
+    doOneTask();
+}
+else
+{
+    doAnotherTask();
 }
 </pre>
 Instead of
@@ -257,18 +310,22 @@ else
 <p>
 Use
 <pre class="good">
-void MyClass:myMethod(const int &amp;param) {
-  if (_myMember &lt; param) {
-    doSomething();
-  }
+void MyClass:myMethod(const int &amp;param)
+{
+    if (_myMember &lt; param)
+    {
+        doSomething();
+    }
 }
 </pre>
 Instead of
 <pre class="bad">
-void MyClass:myMethod(const int &amp;param) {
-  if (this->_myMember &lt; param) {
-    doSomething();
-  }
+void MyClass:myMethod(const int &amp;param)
+{
+    if (this->_myMember &lt; param)
+    {
+        doSomething();
+    }
 }
 </pre>
 </p>
@@ -278,16 +335,18 @@ void MyClass:myMethod(const int &amp;param) {
 <p>
 Use
 <pre class="good">
-void MyClass::myMethod() {
-  OtherClass object;
-  doSomething(object);
+void MyClass::myMethod()
+{
+    OtherClass object;
+    doSomething(object);
 }
 </pre>
 Instead of
 <pre class="bad">
-void MyClass::myMethod() {
-  OtherClass *object = std::make_unique&lt;OtherClass&gt;();
-  doSomething(*object);  
+void MyClass::myMethod()
+{
+    OtherClass *object = std::make_unique&lt;OtherClass&gt;();
+    doSomething(*object);  
 }
 </pre>
 </p>
@@ -312,17 +371,23 @@ MyClass *myObj = new MyClass(constructorParam1, constructorParam2);
 <p>
 Use
 <pre class="good">
-void MyClass::myMethod(const QString &amp;string) {
+void MyClass::myMethod(const QString &amp;string)
+{
+    //use string
 }
 </pre>
 Instead of
 <pre class="bad">
-void MyClass::myMethod(QString *string) {
-//Here we have to check the pointer even if we know it cannot be NULL
+void MyClass::myMethod(QString *string)
+{
+    //Here we have to check the pointer even if we know it cannot be NULL
+    //use string
 }
 
-void MyClass::myMethod(QString string) {
-//Here string is a copy of the original object =&gt; performance issue
+void MyClass::myMethod(QString string)
+{
+    //Here string is a copy of the original object =&gt; performance issue
+    //use string
 }
 </pre>
 </p>
@@ -340,6 +405,27 @@ Position *position = NULL;
 </pre>
 </p>
 
+<h3 id="nullAccess">Null pointers protection</h3>
+<p>Every memory access through a pointer shall be protected by checking first that the pointer is not null.</p>
+<p>
+Use
+<pre class="good">
+if (position == nullptr)
+{
+  //TODO: log with warning or error depending on the context
+}
+else
+{
+  latitude = position->latitude;
+}
+</pre>
+Instead of
+<pre class="bad">
+  latitude = position->latitude;
+</pre>
+</p>
+
+
 <h3 id="cast">Casts</h3>
 <p>Use C++ style cast instead of C style cast.</p>
 <p>
@@ -355,6 +441,26 @@ int i = (int)x;
 </pre>
 </p>
 
+<h3 id="switchDefault">Switch statements</h3>
+<p>
+All switch statements shall contain a <code>default</code> case. The <code>default</code> case for enumerated types shall contain an ERROR log, so that
+every non-caught new enumerated value will be logged in tests.
+</p>
+Example:
+<pre class="good">
+switch(value)
+{
+    case DISABLED:
+        //handle DISABLED value
+        break;
+    case SIMULATED_KEYBOARD:
+        //handle SIMULATED_KEYBOARD value
+        break;
+    default:
+        LOG(ERROR, ....)
+}
+</pre>
+
 <h2 id="samples">Samples</h2>
 <h3 id="samplesH">Header file</h3>
 <pre class="good">
@@ -363,15 +469,16 @@ int i = (int)x;
 */
 #pragma once
 
-namespace Navblue {
-namespace MissionPlus {
+namespace navblue {
+namespace missionplus {
   class OtherClass;
 
 /**
 * \class ARealyNiceClass
 * \brief A really nice class demonstrating our code guidelines
 */
-class MyClass {
+class MyClass
+{
    public:
     // CTors &amp; DTor
 
@@ -396,11 +503,11 @@ class MyClass {
    private:
     // copy constructor
     MyClass(const MyClass&amp;) = delete;
-    // copy assignment
+    // copy assignment operator
     MyClass&amp; operator=(const MyClass&amp;) = delete;
     // move constructor
     MyClass(MyClass&amp;&amp;) = delete;
-    // move assignment
+    // move assignment operator
     MyClass&amp; operator=(MyClass&amp;&amp;) = delete;
 
     // Methods
@@ -412,8 +519,8 @@ class MyClass {
     int _nbFlightPlans {1};
 
 };
-}  // namespace MissionPlus
-}  // namespace Navblue
+}  // namespace missionplus
+}  // namespace navblue
 </pre>
 <h3 id="samplesCpp">Cpp file</h3>
 <pre class="good">
@@ -427,20 +534,28 @@ class MyClass {
 /********* COTS INCLUDES ************/
 #include "OtherClass.h"
 
-using namespace Navblue::MissionPlus;
+namespace navblue {
+namespace missionplus {
 
-MyClass::MyClass() {
-
-}
-
-double MyClass::oneUsefulMethod(const OtherClass&amp; argWellNamed) {
+MyClass::MyClass()
+{
 
 }
 
-int MyClass::onePrivateMethod(int nbWaypoints) {
+double MyClass::oneUsefulMethod(const OtherClass&amp; argWellNamed)
+{
+
+}
+
+int MyClass::onePrivateMethod(int nbWaypoints)
+{
     int localVariable;
 
 }
+
+}  // namespace missionplus
+}  // namespace navblue
+
 </pre>
 
 </body>

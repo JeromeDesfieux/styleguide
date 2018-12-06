@@ -8,17 +8,25 @@
 /********* COTS INCLUDES ************/
 #include "OtherClass.h"
 
-using namespace Navblue::MissionPlus;
+namespace navblue {
+namespace missionplus {
 
-MyClass::MyClass() {
-
-}
-
-double MyClass::oneUsefulMethod(const OtherClass& argWellNamed) {
+MyClass::MyClass()
+{
 
 }
 
-int MyClass::onePrivateMethod(int nbWaypoints) {
+double MyClass::oneUsefulMethod(const OtherClass& argWellNamed)
+{
+
+}
+
+int MyClass::onePrivateMethod(int nbWaypoints)
+{
     int localVariable;
 
 }
+
+} // namespace missionplus
+} // namespace navblue
+
