@@ -22,17 +22,17 @@
 <p>You will code these TODO later once you have better understood the problem. It is very frequently a winning strategy.</p>
 
 <h3 id="log">Logs</h3>
-<p>6 levels of log can be used:
+<p>4 levels of log can be used:
 <ol>
 <li>FATAL: fatal error which closes the application.</li>
-<li>ERROR: error which impacts user experience.</li>
-<li>WARN: potential problem with no impact on user experience.</li>
+<!--<li>CRITICAL: error which impacts user experience.</li> -->
+<li>WARNING: potential problem with no impact on user experience.</li>
 <li>INFO: for tracing all elements that can help to reproduce what happened (user input, connection status with other systems, performance measures, ...).</li>
-<li>TRACE: for development purpose.</li>
-<li>DEBUG: for development purpose, more verbose than TRACE level.</li>
+<li>DEBUG: for development purpose</li>
 </ol>
 </p>
-<p>Note that the application delivered to the clients will log only INFO level to FATAL level.</p>
+<!-- Toujours valable ? -->
+<!-- <p>Note that the application delivered to the clients will log only INFO level to FATAL level.</p> -->
 
 <h3 id="Naming">Naming conventions</h3>
 <p>Namespaces have to be in lower case.</p>
@@ -76,6 +76,23 @@ private:
 
 } //namespace missionplus
 </pre>
+<h3 id="Const">Const position</h3>
+<p> The const qualifier must be placed before the type it qualifies, unless necessary</p>
+<p> Use
+<pre class="good">
+const int value
+</pre>
+instead of
+<pre class="bad">
+int const value
+</pre>
+</p>
+<p> The only case where the const must be placed after the type is for a raw pointer, for example :
+<pre class="good">
+const int * const p
+</pre>
+represents a const pointer on a const int
+</p>
 
 <h2 id="Header">Header files</h2>
 
@@ -160,30 +177,10 @@ Instead of
 <p>The Rule of Zero states that you do not provide any of the functions that the compiler can provide (copy constructor, copy assignment operator, move constructor, move assignment operator, destructor) unless the class you are constructing does some novel form of ownership.
 The goal is to let the compiler provide optimal versions that are automatically maintained when more member variables are added. <br>In practice:
 <ol>
-<li>By default, use <code>= delete </code> for copy, move constructors and assignment operators.</li>
-<li>If you need to use one of these methods, use <code>= default</code>, except if the class has pointers or file handlers as attributes.</li>
+<li>By default, don't declare the destructor, the copy and move constructors and assignment operators. The compiler will generate optimized versions.</li>
+<li>Don't use raw pointers, C-style strings and arrays. If you have to do so, you must apply the rule of 5 and thus declare the destructor, copy and move constructors and assignement operators. </li>
+<li>If you want to declare one of those functions (to put a trace or log inside, for example), you have to declare the others and set them to <code> = default </code>.
 </ol>
-</p>
-<p>
-<pre class="good">
-class MyClass
-{
-   public:
-    /** \brief constructor */
-    MyClass();
-    /** \brief destructor */
-    ~MyClass() = default;
-
-   private:
-    // copy constructor
-    MyClass(const MyClass&amp;) = delete;
-    // copy assignment operator
-    MyClass&amp; operator=(const MyClass&amp;) = delete;
-    // move constructor
-    MyClass(MyClass&amp;&amp;) = delete;
-    // move assignment operator
-    MyClass&amp; operator=(MyClass&amp;&amp;) = delete;
-</pre>
 </p>
 
 <h3 id="membersInit">Members initialization</h3>
@@ -263,7 +260,7 @@ struct B : A
 <h2 id="Cpp">Cpp files</h2>
 
 <h3 id="incOrder">Includes order</h3>
-<p>TODO</p>
+<p>See templates.</p>
 
 <h2 id="Methods">Methods</h2>
 
@@ -460,103 +457,5 @@ switch(value)
         LOG(ERROR, ....)
 }
 </pre>
-
-<h2 id="samples">Samples</h2>
-<h3 id="samplesH">Header file</h3>
-<pre class="good">
-/*
-* Copyright 2019 NAVBLUE. All rights reserved.
-*/
-#pragma once
-
-namespace navblue {
-namespace missionplus {
-  class OtherClass;
-
-/**
-* \class ARealyNiceClass
-* \brief A really nice class demonstrating our code guidelines
-*/
-class MyClass
-{
-   public:
-    // CTors &amp; DTor
-
-    /** \brief constructor */
-    MyClass();
-    /** \brief destructor */
-    ~MyClass() = default;
-
-    // Methods
-
-    /**
-    * \brief A very ususeful method doing a lot of thing like this and that
-    * \param[in] argWellNamed is a parameter that we just use for example
-    * \return the result of a very complicated operation
-    */
-    double oneUsefulMethod(const OtherClass&amp; argWellNamed);
-
-
-
-   protected:
-
-   private:
-    // copy constructor
-    MyClass(const MyClass&amp;) = delete;
-    // copy assignment operator
-    MyClass&amp; operator=(const MyClass&amp;) = delete;
-    // move constructor
-    MyClass(MyClass&amp;&amp;) = delete;
-    // move assignment operator
-    MyClass&amp; operator=(MyClass&amp;&amp;) = delete;
-
-    // Methods
-    int onePrivateMethod(int nbWaypoints);
-
-    // Private attributes
-
-    /** \brief Here is a nice attribut called _file and doing something */
-    int _nbFlightPlans {1};
-
-};
-}  // namespace missionplus
-}  // namespace navblue
-</pre>
-<h3 id="samplesCpp">Cpp file</h3>
-<pre class="good">
-/*
-* Copyright 2019 NAVBLUE. All rights reserved.
-*/
-
-/********* PROJECTS INCLUDES ************/
-#include "MyClass.h"
-
-/********* COTS INCLUDES ************/
-#include "OtherClass.h"
-
-namespace navblue {
-namespace missionplus {
-
-MyClass::MyClass()
-{
-
-}
-
-double MyClass::oneUsefulMethod(const OtherClass&amp; argWellNamed)
-{
-
-}
-
-int MyClass::onePrivateMethod(int nbWaypoints)
-{
-    int localVariable;
-
-}
-
-}  // namespace missionplus
-}  // namespace navblue
-
-</pre>
-
 </body>
 </html>
